@@ -1,72 +1,111 @@
-// knights travails project
+// knights travails
 
-// 8 x 8 chess board
-function createBoard() {
-    let height = 8
-    let width = height
+const combinations = [
+    [1, 2], [1, -2], [2, 1], [2, -1],
+    [-1, 2], [-1, -2], [-2, 1], [-2, -1],
+]
 
+class Node {
+    constructor(x, y, dist = 0, prev = null) {
+        this.x = x
+        this.y = y
+        this.dist = dist
+        this.prev = prev
+    }
+}
+
+
+class Queue {
+    constructor() {
+        this.items = []
+    }
+
+    enqueue(object) {
+        this.items.push(object)
+    }
+
+    dequeue() {
+        return this.items.shift()
+    }
+
+    isEmpty() {
+        if (this.items.length === 0) return true
+        return false
+    }
+
+}
+
+
+function makeBoard() {
     let board = []
-
-    for (let i = 0; i < height; i++) {
-        let row = []
-        board.push(row)
-        for (let j = 0; j < width; j++) {
-            row.push(j)
+    for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+            board.push([i, j])
         }
     }
-
     return board
+}
+
+const board = makeBoard()
+
+
+function possibleValidMoves(node) {
+    let validMoves = []
+
+    combinations.forEach((el) => {
+        // apply combination to current el
+        let curr = new Node(node.x + el[0], node.y + el[1])
+
+        board.forEach((box) => {
+            // if moves are equal push to validMoves
+            if (curr.x == box[0] && curr.y == box[1]) validMoves.push(curr)
+        })
+
+    })
+
+    return validMoves
 
 }
 
-const BOARD = createBoard()
-// console.log(BOARD)
 
-class Knight {
-    constructor(position) {
-        this.position = position
+function displayMoves(curr) {
+    let moves = []
+
+    while (curr !== null) {
+        // go back up and get the first move and then print them
+        moves.unshift(`[${curr.x}, ${curr.y}]`)
+        curr = curr.prev
     }
 
-    isValidPosition(position) {
-        let height = position[0]
-        let width = position[1]
-        
-        if (
-            (height < 0 || height > (BOARD.length - 1)) 
-            || ((width < 0 || width > (BOARD.length - 1)))
-        ) return false
+    return moves
 
-        return true
-
-    }
+}
 
 
-    possibleMoves() {
-        // adjacency list
-        let list = []
+function knightMoves(start, end) {
+    // use queue + BFS
+    let q = new Queue()
 
-        if (this.isValidPosition(this.position)) {
-            let height = this.position[0]
-            let width = this.position[1]
+    // add node to q
+    q.enqueue(new Node(start[0], start[1]))
 
-            let combinations = [[2, -1], [2, 1], [1, -2], [1, 2], [-2 , -1], [-2, 1], [-1 , 2], [-1 , -2]]
+    while (!q.isEmpty()) {
+        let curr = q.dequeue()
 
-            for (let i = 0; i < combinations.length; i++) {
-                let newPosition = [(height + (combinations[i][0])), (width + (combinations[i][1]))]
-                if (this.isValidPosition(newPosition)) list.push(newPosition)
-            }
-
-            return list
-
+        if (curr.x == end[0] && curr.y == end[1]) {
+            return `You made it in ${curr.dist} moves... \n
+            Path: ${displayMoves(curr)}
+            `
         }
 
-        if (!this.isValidPosition(this.position)) return false
+        possibleValidMoves(curr).forEach((el) => {
+            el.prev = curr
+            el.dist = curr.dist + 1
+            q.enqueue(el)
+        })
 
     }
-
 }
 
 
-
-const PIECE = new Knight([0, 0])
-console.log(PIECE.possibleMoves())
+console.log(knightMoves([2, 1], [7, 7]))
